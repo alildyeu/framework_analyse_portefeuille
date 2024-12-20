@@ -112,7 +112,7 @@ sp500_price.data['SP500 Daily Returns'] = sp500_price.data['SPX Price'].pct_chan
 # %% 
 ## Section 2 : Performance & Risques -----------------------------------------------------------
 
-fund = Fund(fund_name, fund_vl, fund_region)
+fund = Fund(fund_name, fund_vl)
 
 # Streamlit
 # Graphique des VL
