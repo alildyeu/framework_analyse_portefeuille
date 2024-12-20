@@ -42,4 +42,4 @@ Les facteurs de performances recensés par AQR sont accessible avec les caracté
 - Sur une fréquence quotidienne et mensuelle.
 - Sur un ensemble de pays et régions.
 
-Afin d'avoir des données alignées avec celles des fonds étudiés, nous nous sommes concentrées sur les **données journalières** et sur les régions **US, Monde et Monde sans les US**.
+Afin d'avoir des données alignées avec celles des fonds étudiés, nous nous sommes concentrées sur les **données journalières** et sur les régions **US et Monde**.
