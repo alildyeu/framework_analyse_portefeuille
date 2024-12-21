@@ -4,9 +4,8 @@ import plotly.express as px
 import os
 
 from src.datafile import DataFile
-from src.fund import Fund
 from src.factor import Factor
-from src.bench import Benchmark
+from src.asset import Fund, Benchmark
 from src.utils import fund_loading_details, load_rfr, filter
 
 # Framework d'Analyse de Fonds ---------------------------------------------------------------------------

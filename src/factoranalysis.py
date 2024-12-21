@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
-from src.fund import Fund
+from src.asset import Fund
 
 class FactorialAnalysis(Fund):
     def __init__(self, name, data, region, factors):

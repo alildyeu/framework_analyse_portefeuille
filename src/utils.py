@@ -3,13 +3,10 @@ import pandas as pd
 import warnings
 
 from src.datafile import DataFile
-from src.fund import Fund
-from src.factor import Factor
-from src.bench import Benchmark
 
 warnings.filterwarnings('ignore')
 
-# Details fichiers par fonds analysés ------------------------------
+# Details fichiers par fonds analysés ------------------------------------------------------------
 def fund_loading_details():
     
     aqr_dict = {
@@ -46,7 +43,7 @@ def fund_loading_details():
                 }
     
     return aqr_dict, jpm_dict, schroder_dict
-#-----------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------
 def load_rfr(name):
     if os.path.exists(rf_path:= f'data/loaded/factors/{name}.xlsx'):
         rfr = pd.read_excel(rf_path)
@@ -64,6 +61,6 @@ def load_rfr(name):
         rfr = import_rf.data
         import_rf.data.to_excel(rf_path, index = False)
     return rfr
-#----------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------
 def filter(data, start_date, end_date):
     return data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
