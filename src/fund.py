@@ -1,7 +1,11 @@
 import numpy as np
+import pandas as pd
+import os
+
+from src.datafile import DataFile
 
 class Fund():
-    def __init__(self, name, vl, region):
+    def __init__(self, all_funds, name):
         """
         Initialize the Fund object.
 
@@ -10,9 +14,16 @@ class Fund():
         - data (pd.DataFrame): DataFrame containing 'Date' and 'VL' columns.
         """
         self.name = name
-        self.vl = vl
-        self.region = region
+        self.vl = self.load_vl(all_funds)
         self.rdments = self.compute_daily_returns()
+    
+    def load_vl(self, all_funds):
+        if os.path.exists(fund_path:= f'data/loaded/funds/{self.name}.xlsx'):
+            self.vl = pd.read_excel(fund_path)
+        else:  
+            import_fund = DataFile(**all_funds[self.name])
+            self.vl = import_fund.data
+            import_fund.data.to_excel(fund_path, index = False)
 
     def compute_daily_returns(self):
         rdment = self.vl.copy()

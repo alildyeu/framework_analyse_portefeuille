@@ -1,5 +1,4 @@
 import pandas as pd
-import warnings
 import streamlit as st
 import plotly.express as px
 import os
@@ -8,6 +7,7 @@ from src.datafile import DataFile
 from src.fund import Fund
 from src.factor import Factor
 from src.bench import Benchmark
+from src.utils import fund_loading_details, load_rfr, filter
 
 # Framework d'Analyse de Fonds ---------------------------------------------------------------------------
 st.title('Analyse de Fonds')
@@ -15,123 +15,34 @@ st.title('Analyse de Fonds')
 ## Section 1 : Import & Traitement des Données -----------------------------------------------------------
 
 ### 1. Import des fonds et leur VL, selon l'entrée de l'utilisateur
-warnings.filterwarnings('ignore')
-
-aqr_dict = {
-    "id":"US00203H4956",
-    "filepath":"data/funds",
-    "filename": "AQR Large Cap Multi-Style Fund Daily Price History",
-    "sheet": False,
-    "file_format": "csv",
-    "select_col": [2,6],
-    "name_col": ['Date','VL'],
-    "first_date": "26/03/2013 00:00",
-            }
-
-jpm_dict = {
-    "id":"LU0129459060",
-    "filepath":"data/funds",
-    "filename":"JPMorgan Funds - America Equity Fund",
-    "sheet":False,
-    "file_format": "xlsx",
-    "select_col": [0,1],
-    "name_col": ['Date','VL'],
-    "first_date": "30.08.2019",
-            }
-
-schroder_dict = {
-    "id":"LU0557290854",
-    "filepath":"data/funds",
-    "filename": "Schroder International Selection Fund Global Sustainable Growth C Accumulation USD",
-    "sheet": False,
-    "file_format": "csv",
-    "select_col": [4,5],
-    "name_col": ['Date','VL'],
-    "first_date": "09.10.2024",
-            }
-
-fonds_dict = {'AQR Large Cap Multi-Style': [aqr_dict,"US"],
-               'JPM America Equity': [jpm_dict,"US"], 
-               'Schroder Global Sustainable Growth': [schroder_dict,"Global"]}
+aqr_dict, jpm_dict, schroder_dict = fund_loading_details()
+fonds_dict = {'AQR Large Cap Multi-Style': aqr_dict,
+               'JPM America Equity': jpm_dict, 
+               'Schroder Global Sustainable Growth': schroder_dict}
 
 fund_name = st.selectbox('Sélectionnez le fonds à analyser:', fonds_dict.keys())
 st.header(f'{fund_name}')
-
-if os.path.exists(fund_path:= f'data/loaded/funds/{fund_name}.xlsx'):
-    fund = Fund(name = fund_name, vl = pd.read_excel(fund_path), region = fonds_dict[fund_name][1])
-else:  
-    import_fund = DataFile(**fonds_dict[fund_name][0])
-    fund = Fund(name = fund_name, vl = import_fund.data, region = fonds_dict[fund_name][1])
-    import_fund.data.to_excel(fund_path, index = False)
+fund = Fund(fonds_dict, fund_name)
 
 ### 2. Import des Facteurs de performance d'AQR
-
-factors_list = ["MKT","SMB","HML FF","HML Devil","UMD"]
+aqr_factors_list = ["MKT","SMB","HML FF","HML Devil","UMD"]
 factors = {}
-
-for factor in factors_list:
-    if os.path.exists(factor_path:= f'data/loaded/factors/{factor}.xlsx'):
-        factors[factor] = Factor(name = factor, value = pd.read_excel(factor_path))
-    else:
-        import_factor = DataFile(
-            id= factor,
-            filepath= "data/aqr factors",
-            filename= "Betting Against Beta Equity Factors Daily",
-            sheet= True,
-            file_format= "xlsx",
-            select_col= [0,25,26], # régions US et Monde
-            name_col= ["Date",f"{factor} US",f"{factor} Global"],
-            first_date= "01/03/1927"
-            )
-        factors[factor] = Factor(name = factor, value = import_factor.data)
-        import_factor.data.to_excel(factor_path, index = False)
+for factor in aqr_factors_list:
+    factors[factor] = Factor(name = factor)
 
 ### 3. Import du Risk-Free Rate
-if os.path.exists(rf_path:= f'data/loaded/factors/RF.xlsx'):
-    rfr = pd.read_excel(rf_path)
-else :
-    import_rf = DataFile(
-            id= "RF",
-            filepath= "data/aqr factors",
-            filename= "Betting Against Beta Equity Factors Daily",
-            sheet= True,
-            file_format= "xlsx",
-            select_col= [0,1],
-            name_col= ["Date","RF"],
-            first_date= "01/03/1927"
-            )
-    rfr = import_rf.data
-    import_rf.data.to_excel(rf_path, index = False)
+rfr = load_rfr("RF")
 
 ### 4. Import du benchmark S&P500
+spx = Benchmark("SPX")
 
-if os.path.exists(bench_path:= f'data/loaded/bench/SP500.xlsx'):
-    spx = Benchmark(name = "SPX", price = pd.read_excel(bench_path))
-else :
-    import_spx = DataFile(
-    id="SPX",
-    filepath="data/bench",
-    filename= "S&P 500 tracker",
-    sheet = False,
-    file_format= "csv",
-    select_col = [0,1], # prix de clôture
-    name_col = ['Date','Price'],
-    first_date= "10/08/2024",
-            )
-    spx = Benchmark(name = "SPX", price = import_spx.data)
-    import_spx.data.to_excel(bench_path, index = False)
-
-# %% 
 ## Section 2 : Performance & Risques -----------------------------------------------------------
 
-def filter(data, start_date, end_date):
-    return data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
-
-# Graphique des VL
+### Graphique des VL
 st.subheader(f'Historique des Valeurs liquidatives')
 st.line_chart(fund.vl.set_index('Date'))
 
-# Graphique rendements cumulés comparés au SP500 (base 100)
+### Graphique rendements cumulés comparés au SP500 (base 100)
 st.subheader(f'Rendements cumulés')
 start_date = max(fund.rdments.iloc[0,0], spx.rdments.iloc[0,0])
 end_date = max(fund.rdments.iloc[-1,0], spx.rdments.iloc[-1,0])
