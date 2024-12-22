@@ -77,7 +77,7 @@ for periode, start_date in fenetres.items():
     daily_returns_fund = filter(fund.rdments, start_date, end_date)
     risk_free_rate = filter(rfr, start_date, end_date)['RF']
 
-    perf = f"{fund.compute_cumul_returns(daily_returns_fund).iloc[-1]["Cumul Returns"]:.2f}%"
+    perf = fund.compute_cumul_returns(daily_returns_fund).iloc[-1]["Cumul Returns"]
     vol = f"{fund.compute_volatility(daily_returns_fund['Returns']):.2f}%"
     sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund['Returns'],risk_free_rate):.2f}"
     performance[periode] = [perf, vol, sharpe_ratio]
@@ -120,7 +120,7 @@ for fund_bis_name in fund_bis_names:
     daily_returns_fund = filter(fund.rdments, start_date, end_date)
     risk_free_rate = filter(rfr, start_date, end_date)['RF']
     
-    perf = f"{fund.compute_cumul_returns(daily_returns_fund).iloc[-1]["Cumul Returns"]:.2f}%"
+    perf = fund.compute_cumul_returns(daily_returns_fund).iloc[-1]["Cumul Returns"]
     vol = f"{fund.compute_volatility(daily_returns_fund['Returns']):.2f}%"
     sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund['Returns'],risk_free_rate):.2f}"
     performance_comparees[fund_bis_name] = [perf, vol, sharpe_ratio]
