@@ -72,7 +72,7 @@ def main():
         sortino[periode] = [downside_vol, sortino_ratio]
 
         risk = Risk(fund, spx)
-        beta = f"{risk.compute_beta(daily_returns_fund, daily_returns_bench, risk_free_rate):.2f}"
+        beta = f"{risk.compute_beta(daily_returns_fund, daily_returns_bench):.2f}"
         alpha = f"{risk.compute_alpha(daily_returns_fund, daily_returns_bench, risk_free_rate):.2f}"
         alpha_beta[periode] = [beta, alpha]
 
