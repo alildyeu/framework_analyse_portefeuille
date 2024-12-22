@@ -23,3 +23,9 @@ class FinancialAsset:
         cumul_returns = returns.copy()
         cumul_returns['Cumul Returns'] = ((cumul_returns[f'{self.name}'] / 100 + 1).cumprod() - 1) * 100
         return cumul_returns[['Date', 'Cumul Returns']]
+
+    def compute_excess_returns(self, returns, risk_free_rate):
+        return returns - risk_free_rate
+    
+    def compute_annualized_returns(self, returns):
+        return (1 + returns.mean()) ** 252 - 1

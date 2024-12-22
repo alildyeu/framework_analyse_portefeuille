@@ -1,9 +1,8 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-import os
-import numpy as np
-from src.datafile import DataFile
+
+from src.risk import Risk
 from src.factor import Factor
 from src.fund import Fund
 from src.bench import Benchmark
@@ -44,23 +43,6 @@ def main():
     st.subheader(f'Historique des Valeurs liquidatives')
     st.line_chart(fund.data.set_index('Date'))
 
-    ### Graphique rendements cumulés comparés au SP500 (base 100)
-    st.subheader(f'Rendements cumulés')
-
-    start_date = fund.rdments.iloc[0,0] # date a laquelle premiere donnee est dispo
-    end_date = find_unique_end_date([fund.rdments, spx.rdments]) # s'assure que toutes les données s'étalent sur la même periode
-    daily_returns_fund = filter(fund.rdments, start_date, end_date)
-    daily_returns_bench = filter(spx.rdments, start_date, end_date)
-
-    cumul_returns = pd.merge(
-        fund.compute_cumul_returns(daily_returns_fund),
-        spx.compute_cumul_returns(daily_returns_bench),
-        on='Date', how='inner'
-        ).rename(columns={'Cumul Returns_x': f'{fund_name}', 'Cumul Returns_y': f'{spx.name}'}
-    )
-    fig = px.line(cumul_returns, x='Date', y=[f'{fund_name}', f'{spx.name}'])
-    st.plotly_chart(fig)
-
     ### Statistiques
     fenetres = {
         "YTD" : "2024-01-01",
@@ -89,24 +71,42 @@ def main():
         sortino_ratio = f"{fund.compute_sortino_ratio(daily_returns_fund, risk_free_rate):.2f}"
         sortino[periode] = [downside_vol, sortino_ratio]
 
-        beta = fund.compute_beta(daily_returns_fund, daily_returns_bench, risk_free_rate)
-        alpha = fund.compute_alpha(daily_returns_fund, daily_returns_bench, risk_free_rate)
+        risk = Risk(fund, spx)
+        beta = f"{risk.compute_beta(daily_returns_fund, daily_returns_bench, risk_free_rate):.2f}"
+        alpha = f"{risk.compute_alpha(daily_returns_fund, daily_returns_bench, risk_free_rate):.2f}"
         alpha_beta[periode] = [beta, alpha]
 
     performance.index=['Performance','Volatility','Sharpe Ratio']
     sortino.index=['Downside Volatility','Sortino Ratio']
-    alpha_beta.index = ['Alpha','Beta']
+    alpha_beta.index = ['Beta','Alpha']
 
     #### Récapitulatif performances
     st.subheader('Récapitulatif Performance')
     st.table(performance)
+
+    #### Graphique rendements cumulés comparés au SP500 (base 100)
+    st.subheader(f'Rendements cumulés')
+
+    start_date = fund.rdments.iloc[0,0] # date a laquelle premiere donnee est dispo
+    end_date = find_unique_end_date([fund.rdments, spx.rdments]) # s'assure que toutes les données s'étalent sur la même periode
+    daily_returns_fund = filter(fund.rdments, start_date, end_date)
+    daily_returns_bench = filter(spx.rdments, start_date, end_date)
+
+    cumul_returns = pd.merge(
+        fund.compute_cumul_returns(daily_returns_fund),
+        spx.compute_cumul_returns(daily_returns_bench),
+        on='Date', how='inner'
+        ).rename(columns={'Cumul Returns_x': f'{fund_name}', 'Cumul Returns_y': f'{spx.name}'}
+    )
+    fig = px.line(cumul_returns, x='Date', y=[f'{fund_name}', f'{spx.name}'])
+    st.plotly_chart(fig)
 
     #### Sortino Ratio
     st.subheader('Sortino Ratio')
     st.table(sortino)
 
     #### Risque
-    st.subheader('Market Performance')
+    st.subheader('Market Risk')
     st.table(alpha_beta)
 
     #### Comparaison performances
