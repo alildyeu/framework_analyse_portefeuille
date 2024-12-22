@@ -40,7 +40,7 @@ def main():
     ## Section 2 : Performance & Risques --------------------------------------------------------------------------
 
     ### Graphique des VL
-    st.subheader(f'Historique des Valeurs liquidatives')
+    st.subheader(f'Historique des valeurs liquidatives')
     st.line_chart(fund.data.set_index('Date'))
 
     ### Statistiques
@@ -51,9 +51,9 @@ def main():
         "5 ans" : fund.rdments.iloc[-252*5,0]
     }
 
+    recap = pd.DataFrame(columns= fenetres.keys())
     performance = pd.DataFrame(columns= fenetres.keys())
-    sortino = pd.DataFrame(columns= fenetres.keys())
-    alpha_beta = pd.DataFrame(columns= fenetres.keys())
+    risques = pd.DataFrame(columns= fenetres.keys())
 
     for periode, start_date in fenetres.items():
         dataset = pd.merge(pd.merge(fund.rdments, rfr, how='inner', on='Date'), spx.rdments, how='inner', on='Date')
@@ -64,50 +64,25 @@ def main():
 
         perf = f"{fund.compute_cumul_returns(dataset[['Date',f'{fund.name}']]).iloc[-1]['Cumul Returns']:.2f}%"
         vol = f"{fund.compute_volatility(daily_returns_fund):.2f}%"
-        sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund,risk_free_rate):.2f}"
-        performance[periode] = [perf, vol, sharpe_ratio]
-
         downside_vol = f"{fund.compute_downside_volatility(daily_returns_fund):.2f}%"
+        sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund,risk_free_rate):.2f}"
         sortino_ratio = f"{fund.compute_sortino_ratio(daily_returns_fund, risk_free_rate):.2f}"
-        sortino[periode] = [downside_vol, sortino_ratio]
-
         risk = Risk(fund, spx)
         beta = f"{risk.compute_beta(daily_returns_fund, daily_returns_bench):.2f}"
         alpha = f"{risk.compute_alpha(daily_returns_fund, daily_returns_bench, risk_free_rate):.2f}"
-        alpha_beta[periode] = [beta, alpha]
+        rel_max_dd = f"{risk.compute_relative_max_drawdown(dataset[['Date',f'{fund.name}']], dataset[['Date',f'{spx.name}']]):.2f}"
+        
+        recap[periode] = [perf, vol, sharpe_ratio]
+        performance[periode] = [perf, alpha, sharpe_ratio, sortino_ratio]
+        risques[periode] = [vol, downside_vol, beta, rel_max_dd ]
 
-    performance.index=['Performance','Volatility','Sharpe Ratio']
-    sortino.index=['Downside Volatility','Sortino Ratio']
-    alpha_beta.index = ['Beta','Alpha']
+    recap.index=['Performance','Volatility','Sharpe Ratio']
+    performance.index=['Performance','Alpha','Sharpe Ratio','Sortino Ratio']
+    risques.index = ['Volatility','Downside Volatility','Beta','Relative Maximum Drawdown']
 
     #### Récapitulatif performances
-    st.subheader('Récapitulatif Performance')
-    st.table(performance)
-
-    #### Graphique rendements cumulés comparés au SP500 (base 100)
-    st.subheader(f'Rendements cumulés')
-
-    start_date = fund.rdments.iloc[0,0] # date a laquelle premiere donnee est dispo
-    end_date = find_unique_end_date([fund.rdments, spx.rdments]) # s'assure que toutes les données s'étalent sur la même periode
-    daily_returns_fund = filter(fund.rdments, start_date, end_date)
-    daily_returns_bench = filter(spx.rdments, start_date, end_date)
-
-    cumul_returns = pd.merge(
-        fund.compute_cumul_returns(daily_returns_fund),
-        spx.compute_cumul_returns(daily_returns_bench),
-        on='Date', how='inner'
-        ).rename(columns={'Cumul Returns_x': f'{fund_name}', 'Cumul Returns_y': f'{spx.name}'}
-    )
-    fig = px.line(cumul_returns, x='Date', y=[f'{fund_name}', f'{spx.name}'])
-    st.plotly_chart(fig)
-
-    #### Sortino Ratio
-    st.subheader('Sortino Ratio')
-    st.table(sortino)
-
-    #### Risque
-    st.subheader('Market Risk')
-    st.table(alpha_beta)
+    st.subheader('Synthèse Performance')
+    st.table(recap)
 
     #### Comparaison performances
     st.subheader('Comparaison Performance')
@@ -131,6 +106,31 @@ def main():
 
     performance_comparees.index=['Performance','Volatilité','Sharpe Ratio']
     st.table(performance_comparees)
+
+    #### Graphique rendements cumulés comparés au SP500 (base 100)
+    st.subheader(f'Rendements cumulés')
+
+    start_date = fund.rdments.iloc[0,0] # date a laquelle premiere donnee est dispo
+    end_date = find_unique_end_date([fund.rdments, spx.rdments]) # s'assure que toutes les données s'étalent sur la même periode
+    daily_returns_fund = filter(fund.rdments, start_date, end_date)
+    daily_returns_bench = filter(spx.rdments, start_date, end_date)
+
+    cumul_returns = pd.merge(
+        fund.compute_cumul_returns(daily_returns_fund),
+        spx.compute_cumul_returns(daily_returns_bench),
+        on='Date', how='inner'
+        ).rename(columns={'Cumul Returns_x': f'{fund_name}', 'Cumul Returns_y': f'{spx.name}'}
+    )
+    fig = px.line(cumul_returns, x='Date', y=[f'{fund_name}', f'{spx.name}'])
+    st.plotly_chart(fig)
+
+    #### Perfomance Metrics
+    st.subheader('Perfomance Metrics')
+    st.table(performance)
+
+    #### Risque Metrics
+    st.subheader('Risk Metrics')
+    st.table(risques)
 
 if __name__ == '__main__':
     main()

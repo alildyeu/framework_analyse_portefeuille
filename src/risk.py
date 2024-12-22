@@ -18,6 +18,10 @@ class Risk():
         beta = self.compute_beta(returns, benchmark_returns)
         return np.mean(excess_fund_returns) - beta * np.mean(excess_benchmark_returns)
 
-    def compute_covariance(self, fund_excess_returns, benchmark_excess_returns):
-        return np.cov(fund_excess_returns[1:], benchmark_excess_returns[1:])[0, 1]
+    def compute_relative_max_drawdown(self, returns, benchmark_returns):
+        fund_cumulative_returns = self.fund.compute_cumul_returns(returns)['Cumul Returns']
+        benchmark_cumulative_returns = self.bench.compute_cumul_returns(benchmark_returns)['Cumul Returns']
+        relative_drawdown = fund_cumulative_returns / benchmark_cumulative_returns - 1
+        return relative_drawdown.min()
+
     
