@@ -19,8 +19,8 @@ class FinancialAsset:
         rdment['Returns'] = rdment[column_name].pct_change() * 100
         self.rdments = rdment[['Date', 'Returns']]
 
-    def compute_cumul_returns(self):
-        cumul_returns = self.rdments.copy()
-        cumul_returns['Cumul Returns'] = (self.rdments['Returns'] / 100 + 1).cumprod() - 1
+    def compute_cumul_returns(self, returns):
+        cumul_returns = returns.copy()
+        cumul_returns['Cumul Returns'] = (cumul_returns['Returns'] / 100 + 1).cumprod() - 1
         cumul_returns['Cumul Returns'] = cumul_returns['Cumul Returns'] * 100
         return cumul_returns[['Date', 'Cumul Returns']]

@@ -6,7 +6,7 @@ from src.datafile import DataFile
 class Factor():
     def __init__(self, name):
         self.name = name
-        self.value = self.load_value()
+        self.load_value()
         self.us = self.value[['Date',f'{name} US']]
         self.monde = self.value[['Date',f'{name} Global']]
 

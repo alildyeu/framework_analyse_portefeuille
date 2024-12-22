@@ -62,5 +62,13 @@ def load_rfr(name):
         import_rf.data.to_excel(rf_path, index = False)
     return rfr
 #--------------------------------------------------------------------------------------------------------
+def find_unique_end_date(dataframes):
+    end_dates = []
+    for df in dataframes:
+        end_dates.append(df.iloc[-1,0])
+    end_date = min(end_dates)
+    return end_date
+#--------------------------------------------------------------------------------------------------------
 def filter(data, start_date, end_date):
     return data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
+#--------------------------------------------------------------------------------------------------------

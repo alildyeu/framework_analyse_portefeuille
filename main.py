@@ -5,8 +5,9 @@ import os
 
 from src.datafile import DataFile
 from src.factor import Factor
-from src.asset import Fund, Benchmark
-from src.utils import fund_loading_details, load_rfr, filter
+from src.fund import Fund
+from src.bench import Benchmark
+from src.utils import fund_loading_details, load_rfr, filter, find_unique_end_date
 
 # Framework d'Analyse de Fonds ---------------------------------------------------------------------------
 st.title('Analyse de Fonds')
@@ -21,7 +22,7 @@ fonds_dict = {'AQR Large Cap Multi-Style': aqr_dict,
 
 fund_name = st.selectbox('Sélectionnez le fonds à analyser:', fonds_dict.keys())
 st.header(f'{fund_name}')
-fund = Fund(fonds_dict, fund_name)
+fund = Fund(fund_name, fonds_dict)
 
 ### 2. Import des Facteurs de performance d'AQR
 aqr_factors_list = ["MKT","SMB","HML FF","HML Devil","UMD"]
@@ -35,123 +36,101 @@ rfr = load_rfr("RF")
 ### 4. Import du benchmark S&P500
 spx = Benchmark("SPX")
 
-## Section 2 : Performance & Risques -----------------------------------------------------------
+## Section 2 : Performance & Risques --------------------------------------------------------------------------
 
 ### Graphique des VL
 st.subheader(f'Historique des Valeurs liquidatives')
-st.line_chart(fund.vl.set_index('Date'))
+st.line_chart(fund.data.set_index('Date'))
 
 ### Graphique rendements cumulés comparés au SP500 (base 100)
 st.subheader(f'Rendements cumulés')
-start_date = max(fund.rdments.iloc[0,0], spx.rdments.iloc[0,0])
-end_date = max(fund.rdments.iloc[-1,0], spx.rdments.iloc[-1,0])
+
+start_date = fund.rdments.iloc[0,0] # date a laquelle premiere donnee est dispo
+end_date = find_unique_end_date([fund.rdments, spx.rdments]) # s'assure que toutes les données s'étalent sur la même periode
+daily_returns_fund = filter(fund.rdments, start_date, end_date)
+daily_returns_bench = filter(spx.rdments, start_date, end_date)
 
 cumul_returns = pd.merge(
-    fund.compute_cumul_returns(filter(fund.rdments, start_date, end_date)), 
-    spx.compute_cumul_returns(filter(spx.rdments, start_date, end_date)), 
+    fund.compute_cumul_returns(daily_returns_fund), 
+    spx.compute_cumul_returns(daily_returns_bench), 
     on='Date', how='inner'
-    ).rename(columns={'Cumul Returns_x': f'{fund_name}', 'Cumul Returns_y': 'SP500'}
+    ).rename(columns={'Cumul Returns_x': f'{fund_name}', 'Cumul Returns_y': f'{spx.name}'}
 )
-fig = px.line(cumul_returns, x='Date', y=[f'{fund_name}', 'SP500'])
+fig = px.line(cumul_returns, x='Date', y=[f'{fund_name}', f'{spx.name}'])
 st.plotly_chart(fig)
 
-# Récapitulatif Performance
-st.subheader('Récapitulatif Performance')
-
-start_dates = {
+### Statistiques
+fenetres = {
     "YTD" : "2024-01-01",
     "1 an" : fund.rdments.iloc[-252,0],
     "3 ans" : fund.rdments.iloc[-252*3,0],
     "5 ans" : fund.rdments.iloc[-252*5,0]
 }
 
-performance = pd.DataFrame(columns= start_dates.keys())
-sortino = pd.DataFrame(columns= start_dates.keys())
-alpha = pd.DataFrame(columns= ["Alpha","Beta"])
+performance = pd.DataFrame(columns= fenetres.keys())
+sortino = pd.DataFrame(columns= fenetres.keys())
+alpha_beta = pd.DataFrame(columns= fenetres.keys())
 
-for periode in start_dates.keys():
-    data_periode = filter(fund.rdments, start_dates[periode], fund.rdments.iloc[-1,0])
-    rfr_periode = filter(rfr, start_dates[periode], fund.rdments.iloc[-1,0])
+for periode, start_date in fenetres.items():
+    end_date = find_unique_end_date([fund.rdments, rfr, spx.rdments])
+    daily_returns_bench = filter(spx.rdments, start_date, end_date)
+    daily_returns_fund = filter(fund.rdments, start_date, end_date)
+    risk_free_rate = filter(rfr, start_date, end_date)['RF']
 
-    # Merge data_periode and rfr_periode on Date to align them
-    merged_data = pd.merge(
-        data_periode[['Date', 'Returns']],
-        rfr_periode[['Date', 'RF']],
-        on='Date',
-        how='inner'
-    )
-
-    # Ensure no NaN values exist after merging
-    if merged_data.isnull().values.any():
-        st.warning(f"Missing values detected for the period: {periode}. Please check your data.")
-        continue
-
-    # Extract aligned Returns and RF
-    aligned_returns = merged_data['Returns']
-    aligned_rf = merged_data['RF']
-
-    perf = fund.compute_cumul_returns(data_periode).iloc[-1]["Cumul Returns"]
-    vol = f"{fund.compute_volatility(aligned_returns):.2f}%"
-    sharpe_ratio = f"{fund.compute_sharpe_ratio(aligned_returns,aligned_rf):.2f}"
+    perf = f"{fund.compute_cumul_returns(daily_returns_fund).iloc[-1]["Cumul Returns"]:.2f}%"
+    vol = f"{fund.compute_volatility(daily_returns_fund['Returns']):.2f}%"
+    sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund['Returns'],risk_free_rate):.2f}"
     performance[periode] = [perf, vol, sharpe_ratio]
 
-    downside_vol = f"{fund.compute_downside_volatility(aligned_returns):.2f}%"
-    sortino_ratio = f"{fund.compute_sortino_ratio(aligned_returns, aligned_rf):.2f}"
+    downside_vol = f"{fund.compute_downside_volatility(daily_returns_fund['Returns']):.2f}%"
+    sortino_ratio = f"{fund.compute_sortino_ratio(daily_returns_fund['Returns'], risk_free_rate):.2f}"
     sortino[periode] = [downside_vol, sortino_ratio]
+
+    beta = fund.compute_beta(daily_returns_fund['Returns'], daily_returns_bench['Returns'], risk_free_rate)
+    alpha = fund.compute_alpha(daily_returns_fund['Returns'], daily_returns_bench['Returns'], risk_free_rate)
+    alpha_beta[periode] = [beta, alpha]
 
 performance.index=['Performance','Volatility','Sharpe Ratio']
 sortino.index=['Downside Volatility','Sortino Ratio']
+alpha_beta.index = ['Alpha','Beta']
+
+#### Récapitulatif performances
+st.subheader('Récapitulatif Performance')
 st.table(performance)
 
-# Comparaison performances
+#### Sortino Ratio
+st.subheader('Sortino Ratio')
+st.table(sortino)
+
+#### Sortino Ratio
+st.subheader('Market Performance')
+st.table(alpha_beta)
+
+#### Comparaison performances
 st.subheader('Comparaison Performance')
-funds_comp_name = st.multiselect('Sélectionnez les fonds à comparer:', [f for f in fonds_dict.keys() if f!=fund_name])
-window = st.selectbox("Sélectionnez la période d'analyse:", start_dates.keys())
+fund_bis_names = st.multiselect('Sélectionnez les fonds à comparer:', [f for f in fonds_dict.keys() if f!=fund_name])
+window = st.selectbox("Sélectionnez la période d'analyse:", fenetres.keys())
 
-funds_comp_name.append(fund_name)
-performance_comparees = pd.DataFrame(columns= funds_comp_name)
+fund_bis_names.append(fund_name)
+performance_comparees = pd.DataFrame(columns= fund_bis_names)
 
-for fund_comp_name in funds_comp_name:
-    if os.path.exists(fund_comp_path:= f'data/loaded/funds/{fund_comp_name}.xlsx'):
-        fund_comp = Fund(name = fund_comp_name, vl = pd.read_excel(fund_comp_path), region = fonds_dict[fund_comp_name][1])
-    else:  
-        import_fund_comp = DataFile(**fonds_dict[fund_comp_name][0])
-        fund_comp = Fund(name = fund_comp_name, vl = import_fund_comp.data, region = fonds_dict[fund_name][1])
-        import_fund_comp.data.to_excel(funds_comp_name, index = False)
+for fund_bis_name in fund_bis_names:
+    fund_bis = Fund(fund_bis_name, fonds_dict)
+    end_date = find_unique_end_date([fund.rdments, rfr])
+    daily_returns_fund = filter(fund.rdments, start_date, end_date)
+    risk_free_rate = filter(rfr, start_date, end_date)['RF']
     
-    data_window = filter(fund_comp.rdments, start_dates[window], fund_comp.rdments.iloc[-1,0])
-    rfr_window = filter(rfr, start_dates[window], fund_comp.rdments.iloc[-1,0])
-    
-    # Merge data_periode and rfr_periode on Date to align them
-    merged_window = pd.merge(
-        data_periode[['Date', 'Returns']],
-        rfr_periode[['Date', 'RF']],
-        on='Date',
-        how='inner'
-    )
-
-    # Ensure no NaN values exist after merging
-    if merged_window.isnull().values.any():
-        st.warning(f"Missing values detected for the period: {periode}. Please check your data.")
-        continue
-
-    # Extract aligned Returns and RF
-    aligned_r = merged_window['Returns']
-    aligned_rfr = merged_window['RF']
-    
-    perf = fund_comp.compute_cumul_returns(data_window).iloc[-1]["Cumul Returns"]
-    vol = f"{fund_comp.compute_volatility(aligned_r):.2f}%"
-    sharpe_ratio = f"{fund_comp.compute_sharpe_ratio(aligned_r, aligned_rfr):.2f}"
-    performance_comparees[fund_comp_name] = [perf, vol, sharpe_ratio]
+    perf = f"{fund.compute_cumul_returns(daily_returns_fund).iloc[-1]["Cumul Returns"]:.2f}%"
+    vol = f"{fund.compute_volatility(daily_returns_fund['Returns']):.2f}%"
+    sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund['Returns'],risk_free_rate):.2f}"
+    performance_comparees[fund_bis_name] = [perf, vol, sharpe_ratio]
 
 performance_comparees.index=['Performance','Volatilité','Sharpe Ratio']
 st.table(performance_comparees)
 
-# Other Metrics
-st.subheader('Other Metrics')
-st.table(sortino)
 
-# %% 
+
+
 ## Section 3 : Analyse Factorielle  -----------------------------------------------------------
 
 
