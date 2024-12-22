@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 import os
-
+import numpy as np
 from src.datafile import DataFile
 from src.factor import Factor
 from src.fund import Fund
