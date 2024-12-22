@@ -80,18 +80,18 @@ def main():
         daily_returns_fund = dataset[f'{spx.name}']
         risk_free_rate = dataset['RF']
 
-    perf = f"{fund.compute_cumul_returns(dataset[['Date',f'{fund.name}']]).iloc[-1]['Cumul Returns']:.2f}%"
-    vol = f"{fund.compute_volatility(daily_returns_fund):.2f}%"
-    sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund,risk_free_rate):.2f}"
-    performance[periode] = [perf, vol, sharpe_ratio]
+        perf = f"{fund.compute_cumul_returns(dataset[['Date',f'{fund.name}']]).iloc[-1]['Cumul Returns']:.2f}%"
+        vol = f"{fund.compute_volatility(daily_returns_fund):.2f}%"
+        sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund,risk_free_rate):.2f}"
+        performance[periode] = [perf, vol, sharpe_ratio]
 
-    downside_vol = f"{fund.compute_downside_volatility(daily_returns_fund):.2f}%"
-    sortino_ratio = f"{fund.compute_sortino_ratio(daily_returns_fund, risk_free_rate):.2f}"
-    sortino[periode] = [downside_vol, sortino_ratio]
+        downside_vol = f"{fund.compute_downside_volatility(daily_returns_fund):.2f}%"
+        sortino_ratio = f"{fund.compute_sortino_ratio(daily_returns_fund, risk_free_rate):.2f}"
+        sortino[periode] = [downside_vol, sortino_ratio]
 
-    beta = fund.compute_beta(daily_returns_fund, daily_returns_bench, risk_free_rate)
-    alpha = fund.compute_alpha(daily_returns_fund, daily_returns_bench, risk_free_rate)
-    alpha_beta[periode] = [beta, alpha]
+        beta = fund.compute_beta(daily_returns_fund, daily_returns_bench, risk_free_rate)
+        alpha = fund.compute_alpha(daily_returns_fund, daily_returns_bench, risk_free_rate)
+        alpha_beta[periode] = [beta, alpha]
 
     performance.index=['Performance','Volatility','Sharpe Ratio']
     sortino.index=['Downside Volatility','Sortino Ratio']
@@ -124,10 +124,10 @@ def main():
         daily_returns_fund_bis = dataset[f'{fund_bis.name}']
         risk_free_rate = dataset['RF']
     
-    perf = f"{fund_bis.compute_cumul_returns(dataset[['Date',f'{fund_bis.name}']]).iloc[-1]['Cumul Returns']:.2f}%"
-    vol = f"{fund_bis.compute_volatility(daily_returns_fund_bis):.2f}%"
-    sharpe_ratio = f"{fund_bis.compute_sharpe_ratio(daily_returns_fund_bis,risk_free_rate):.2f}"
-    performance_comparees[fund_bis.name] = [perf, vol, sharpe_ratio]
+        perf = f"{fund_bis.compute_cumul_returns(dataset[['Date',f'{fund_bis.name}']]).iloc[-1]['Cumul Returns']:.2f}%"
+        vol = f"{fund_bis.compute_volatility(daily_returns_fund_bis):.2f}%"
+        sharpe_ratio = f"{fund_bis.compute_sharpe_ratio(daily_returns_fund_bis,risk_free_rate):.2f}"
+        performance_comparees[fund_bis.name] = [perf, vol, sharpe_ratio]
 
     performance_comparees.index=['Performance','Volatilité','Sharpe Ratio']
     st.table(performance_comparees)
