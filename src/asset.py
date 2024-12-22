@@ -16,11 +16,10 @@ class FinancialAsset:
     
     def compute_daily_returns(self, column_name):
         rdment = self.data.copy()
-        rdment['Returns'] = rdment[column_name].pct_change() * 100
-        self.rdments = rdment[['Date', 'Returns']]
+        rdment[f'{self.name}'] = rdment[column_name].pct_change() * 100
+        self.rdments = rdment[['Date', f'{self.name}']]
 
     def compute_cumul_returns(self, returns):
         cumul_returns = returns.copy()
-        cumul_returns['Cumul Returns'] = (cumul_returns['Returns'] / 100 + 1).cumprod() - 1
-        cumul_returns['Cumul Returns'] = cumul_returns['Cumul Returns'] * 100
+        cumul_returns['Cumul Returns'] = ((cumul_returns[f'{self.name}'] / 100 + 1).cumprod() - 1) * 100
         return cumul_returns[['Date', 'Cumul Returns']]

@@ -72,22 +72,23 @@ sortino = pd.DataFrame(columns= fenetres.keys())
 alpha_beta = pd.DataFrame(columns= fenetres.keys())
 
 for periode, start_date in fenetres.items():
-    end_date = find_unique_end_date([fund.rdments, rfr, spx.rdments])
-    daily_returns_bench = filter(spx.rdments, start_date, end_date)
-    daily_returns_fund = filter(fund.rdments, start_date, end_date)
-    risk_free_rate = filter(rfr, start_date, end_date)['RF']
+    dataset = pd.merge(pd.merge(fund.rdments, rfr, how='inner', on='Date'), spx.rdments, how='inner', on='Date')
+    dataset = filter(dataset, start_date, end_date:=dataset.iloc[-1,0])
+    daily_returns_bench = dataset[f'{fund.name}']
+    daily_returns_fund = dataset[f'{spx.name}']
+    risk_free_rate = dataset['RF']
 
-    perf = fund.compute_cumul_returns(daily_returns_fund).iloc[-1]["Cumul Returns"]
-    vol = f"{fund.compute_volatility(daily_returns_fund['Returns']):.2f}%"
-    sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund['Returns'],risk_free_rate):.2f}"
+    perf = f"{fund.compute_cumul_returns(dataset[['Date',f'{fund.name}']]).iloc[-1]['Cumul Returns']:.2f}%"
+    vol = f"{fund.compute_volatility(daily_returns_fund):.2f}%"
+    sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund,risk_free_rate):.2f}"
     performance[periode] = [perf, vol, sharpe_ratio]
 
-    downside_vol = f"{fund.compute_downside_volatility(daily_returns_fund['Returns']):.2f}%"
-    sortino_ratio = f"{fund.compute_sortino_ratio(daily_returns_fund['Returns'], risk_free_rate):.2f}"
+    downside_vol = f"{fund.compute_downside_volatility(daily_returns_fund):.2f}%"
+    sortino_ratio = f"{fund.compute_sortino_ratio(daily_returns_fund, risk_free_rate):.2f}"
     sortino[periode] = [downside_vol, sortino_ratio]
 
-    beta = fund.compute_beta(daily_returns_fund['Returns'], daily_returns_bench['Returns'], risk_free_rate)
-    alpha = fund.compute_alpha(daily_returns_fund['Returns'], daily_returns_bench['Returns'], risk_free_rate)
+    beta = fund.compute_beta(daily_returns_fund, daily_returns_bench, risk_free_rate)
+    alpha = fund.compute_alpha(daily_returns_fund, daily_returns_bench, risk_free_rate)
     alpha_beta[periode] = [beta, alpha]
 
 performance.index=['Performance','Volatility','Sharpe Ratio']
@@ -102,7 +103,7 @@ st.table(performance)
 st.subheader('Sortino Ratio')
 st.table(sortino)
 
-#### Sortino Ratio
+#### Risque
 st.subheader('Market Performance')
 st.table(alpha_beta)
 
@@ -116,14 +117,15 @@ performance_comparees = pd.DataFrame(columns= fund_bis_names)
 
 for fund_bis_name in fund_bis_names:
     fund_bis = Fund(fund_bis_name, fonds_dict)
-    end_date = find_unique_end_date([fund.rdments, rfr])
-    daily_returns_fund = filter(fund.rdments, start_date, end_date)
-    risk_free_rate = filter(rfr, start_date, end_date)['RF']
+    dataset = pd.merge(fund_bis.rdments, rfr, how='inner', on='Date')
+    dataset = filter(dataset, start_date:=fenetres[window], end_date:=dataset.iloc[-1,0])
+    daily_returns_fund_bis = dataset[f'{fund_bis.name}']
+    risk_free_rate = dataset['RF']
     
-    perf = fund.compute_cumul_returns(daily_returns_fund).iloc[-1]["Cumul Returns"]
-    vol = f"{fund.compute_volatility(daily_returns_fund['Returns']):.2f}%"
-    sharpe_ratio = f"{fund.compute_sharpe_ratio(daily_returns_fund['Returns'],risk_free_rate):.2f}"
-    performance_comparees[fund_bis_name] = [perf, vol, sharpe_ratio]
+    perf = f"{fund_bis.compute_cumul_returns(dataset[['Date',f'{fund_bis.name}']]).iloc[-1]['Cumul Returns']:.2f}%"
+    vol = f"{fund_bis.compute_volatility(daily_returns_fund_bis):.2f}%"
+    sharpe_ratio = f"{fund_bis.compute_sharpe_ratio(daily_returns_fund_bis,risk_free_rate):.2f}"
+    performance_comparees[fund_bis.name] = [perf, vol, sharpe_ratio]
 
 performance_comparees.index=['Performance','Volatilité','Sharpe Ratio']
 st.table(performance_comparees)
