@@ -1,3 +1,11 @@
+# Framework analysis portefolio
+
+## Setup
+
+``` bash
+pip install -r requirements.txt
+```
+
 ## 1. Fiches d'identités des fonds étudiés
 
 ### JPM America Equity C (Acc)
