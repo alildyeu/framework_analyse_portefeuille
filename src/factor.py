@@ -24,5 +24,6 @@ class Factor():
                 name_col= ["Date",f"{self.name} US",f"{self.name} Global"],
                 first_date= "01/03/1927"
                 )
+            import_factor.data.loc[:, import_factor.data.columns != "Date"] *= 100
             self.value = import_factor.data
             import_factor.data.to_excel(factor_path, index = False)

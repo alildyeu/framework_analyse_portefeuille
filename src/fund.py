@@ -4,8 +4,9 @@ from src.datafile import DataFile
 from src.asset import FinancialAsset
 
 class Fund(FinancialAsset):
-    def __init__(self, name, all_funds):
+    def __init__(self, name, region, all_funds):
         super().__init__(name)
+        self.region = region
         self.load_data(
             f'data/loaded/funds/{name}.xlsx',
             lambda: DataFile(**all_funds[name]).data
