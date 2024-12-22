@@ -1,4 +1,4 @@
-# Framework analysis portefolio
+# Framework analysis portfolio
 
 ## Setup
 
@@ -8,7 +8,7 @@ pip install -r requirements.txt
 
 ## How to run
 
-IN a terminal type
+In a terminal type
 
 ``` bash
 streamlit run main.py

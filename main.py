@@ -157,10 +157,9 @@ def main():
         legend=dict(orientation='h', x=0.5,  xanchor='center',y=-0.2  )
     )
     
-    # Visualisation vecteurs des facteurs
     scaling_factor = 3 # pour agrandir un peu les vecteurs sur le plot
     colors = cycle(px.colors.qualitative.Plotly)  
-    for i, feature in enumerate(feature_names):
+    for i, feature in enumerate(feature_names): # visualisation vecteurs des facteurs
         color = next(colors) 
         fig_acp.add_trace(go.Scatter(x=[0, pca_loadings[0, i]* scaling_factor], 
                                      y=[0, pca_loadings[1, i]* scaling_factor],
