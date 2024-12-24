@@ -104,7 +104,13 @@ def main():
     for fund_bis_name in fund_bis_names:
         fund_bis = Fund(fund_bis_name, region_fund[fund_bis_name],fonds_dict)
         dataset = pd.merge(fund_bis.rdments, rfr, how='inner', on='Date')
-        dataset = filter(dataset, start_date:=fenetres[window], end_date:=dataset.iloc[-1,0])
+        time_window = {
+        "YTD" : "2024-01-01",
+        "1 an" : fund_bis.rdments.iloc[-252,0],
+        "3 ans" : fund_bis.rdments.iloc[-252*3,0],
+        "5 ans" : fund_bis.rdments.iloc[-252*5,0]}
+
+        dataset = filter(dataset, start_date:=time_window[window], end_date:=dataset.iloc[-1,0])
         daily_returns_fund_bis = dataset[f'{fund_bis.name}']
         risk_free_rate = dataset['RF']
     
@@ -115,6 +121,7 @@ def main():
 
     performance_comparees.index=['Performance','Volatilité','Sharpe Ratio']
     st.table(performance_comparees)
+    st.info("ℹ️ Les performances comparées et synthétisées dans le tableau du dessus diffèrent légèrement : les fenêtres de calcul sont en effet harmonisées pour pouvoir comparer les fonds entre eux")
 
     #### Graphique rendements cumulés comparés au SP500 (base 100)
     st.subheader(f'Rendements cumulés')
