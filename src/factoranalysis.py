@@ -9,6 +9,12 @@ from sklearn.linear_model import LinearRegression
 from src.fund import Fund
 
 class FactorialAnalysis():
+    """
+    Classe FactorialAnalysis pour réaliser une analyse factorielle (ici ACP) sur un fonds d'investissement.
+    
+    Cette classe prend en entrée un objet Fund et un dictionnaire de facteurs, construit un jeu de données combiné,
+    normalise les données, effectue une ACP, et applique une régression linéaire sur les composantes principales.
+    """
     def __init__(self, fund, factors_dict):
         self.fund: Fund = fund
         self.factors_dict: dict = factors_dict
@@ -17,6 +23,7 @@ class FactorialAnalysis():
         self.x = self.df.filter(like=f'{self.fund.region}') #selectionne les facteurs de la region appropriée
 
     def build_dataset(self):
+        """Construit un jeu de données combiné à partir des données du fonds et des facteurs de performance."""
         all_factors = pd.DataFrame()
         for factor_name, factor in self.factors_dict.items():
             if all_factors.empty:
@@ -28,6 +35,15 @@ class FactorialAnalysis():
         return full_dataset
     
     def ACP(self):
+        """
+        Réalise une Analyse en Composantes Principales (ACP) sur les données normalisées,
+        et effectue une régression linéaire sur les composantes principales.
+        
+        Returns:
+            tuple: Contient les données de test transformées, les vraies valeurs de test, les charges des composantes,
+                   les noms des caractéristiques, et la variance expliquée par chaque composante.
+        """
+
         x_train, x_test, y_train, y_test = self.divide_train_test()
         x_train, x_test = self.normalize_data(x_train, x_test)
 
