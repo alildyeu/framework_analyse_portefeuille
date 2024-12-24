@@ -4,6 +4,14 @@ from src.datafile import DataFile
 from src.asset import FinancialAsset
 
 class Fund(FinancialAsset):
+    """
+    Représente un fonds d'investissement, avec des méthodes pour analyser sa performance financière.
+
+    Hérite de la classe FinancialAsset et ajoute des fonctionnalités spécifiques aux fonds,
+    comme le calcul des ratios de performance (Sharpe, Sortino), ainsi que la gestion 
+    des rendements quotidiens et de la volatilité.
+
+    """
     def __init__(self, name, region, all_funds):
         super().__init__(name)
         self.region = region
