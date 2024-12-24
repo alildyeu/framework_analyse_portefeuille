@@ -136,10 +136,32 @@ def main():
     #### Perfomance Metrics
     st.subheader('Perfomance Metrics')
     st.table(performance)
+    perf_description = {
+    "Performance": "Le rendement cumulatif montre la performance totale du fonds sur une période donnée.",
+    "Volatility": "La volatilité mesure la variation des rendements du fonds, indiquant le niveau de risque.",
+    "Sharpe Ratio": "Le ratio de Sharpe évalue le rendement ajusté au risque, calculant combien de rendement excédentaire vous obtenez par unité de volatilité.",
+    "Alpha": "L'alpha mesure la performance du fonds par rapport à son benchmark, indiquant la valeur ajoutée par le gestionnaire de fonds.",
+    "Sortino Ratio": "Le ratio de Sortino est similaire au ratio de Sharpe mais se concentre uniquement sur la volatilité négative, offrant une évaluation plus précise du risque de baisse.",
+    }
+    # Explications
+    with st.expander("📖 Explications des métriques de performance"):
+        for ratio, description in perf_description.items():
+            if ratio in performance.index:
+                st.markdown(f"*{ratio}*: {description}")
 
     #### Risque Metrics
     st.subheader('Risk Metrics')
     st.table(risques)
+    # Explications
+    risk_description = {
+    "Downside Volatility": "La volatilité négative mesure uniquement les variations à la baisse des rendements, fournissant une évaluation du risque de perte.",
+    "Beta": "Le bêta mesure la sensibilité du fonds par rapport aux mouvements du benchmark, indiquant le niveau de risque systématique.",
+    "Relative Maximum Drawdown": "La baisse maximale relative compare la plus grande perte du fonds à celle du benchmark, évaluant la résilience face aux pertes."
+    }
+    with st.expander("📖 Explications des métriques de risque"):
+        for ratio, description in risk_description.items():
+            if ratio in risques.index:
+                st.markdown(f"*{ratio}*: {description}")
 
 ## Section 3 : Analyse Factorielle  -----------------------------------------------------------
     st.subheader('Principal Component Analysis')
@@ -169,6 +191,23 @@ def main():
                                     text=[feature]))
 
     st.plotly_chart(fig_acp)
+
+    # Explications de l'Analyse Factorielle (ACP) 
+    with st.expander("📖 Explications de l'Analyse Factorielle (ACP)"):
+        st.markdown("""
+            ### *Qu'est-ce que l'ACP ?*
+            L'Analyse en Composantes Principales (ACP) est une méthode statistique utilisée pour réduire la dimensionnalité des données tout en conservant l'essentiel de l'information. Elle permet d'identifier les combinaisons linéaires des facteurs de performance qui expliquent le mieux la variance des rendements des fonds.
+
+            ### *Interprétation des Résultats*
+            - *Variance Expliquée* : Chaque composante principale (PC1, PC2, etc.) explique une portion de la variance totale des données. Par exemple, *PC1* pourrait expliquer 60% de la variance, tandis que *PC2* en explique 25%.
+            - *Charges des Composantes* : Les charges indiquent l'importance de chaque facteur dans une composante. Des charges élevées (positives ou négatives) signifient que le facteur a une influence significative sur la composante.
+            - *Visualisation des Fonds* : Dans le graphique ACP, chaque point représente un fonds projeté dans l'espace des deux premières composantes principales. Cela permet de visualiser les similarités et différences entre les fonds en fonction des facteurs de performance.
+
+            ### *Comment utiliser ces informations ?*
+            - *Identifier les Facteurs Clés* : Comprenez quels facteurs influencent le plus les rendements des fonds.
+            - *Comparer les Fonds* : Visualisez comment différents fonds se positionnent par rapport aux facteurs principaux, facilitant ainsi la comparaison et la prise de décision.
+            - *Optimisation de Portefeuille* : Utilisez les informations de l'ACP pour diversifier ou optimiser votre portefeuille en fonction des facteurs de risque et de performance identifiés.
+        """) 
 
 if __name__ == '__main__':
     main()

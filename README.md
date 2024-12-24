@@ -14,7 +14,7 @@ In a terminal type
 streamlit run main.py
 ```
 
-## 1. Fiches d'identités des fonds étudiés
+## Fiches d'identités des fonds étudiés
 
 ### JPM America Equity C (Acc)
 - ISIN : LU0129459060
@@ -40,7 +40,7 @@ streamlit run main.py
 - Géographie : US
 - Devise : US$ 
 
-## 2. Sélection des données
+## Sélection des données
 
 ### a. Fonds : choix de parts
 Pour le fonds AQR Large Cap Multi-Style, trois parts sont présentes dans le fichiers :  
@@ -59,3 +59,12 @@ Les facteurs de performances recensés par AQR sont accessible avec les caracté
 - Sur un ensemble de pays et régions.
 
 Afin d'avoir des données alignées avec celles des fonds étudiés, nous nous sommes concentrées sur les **données journalières** et sur les régions **US et Monde**.
+
+## Étapes de l'ACP
+1. **⁠Collecte des Facteurs de Performance** : Vous avez identifié plusieurs facteurs de performance (par exemple, MKT, SMB, HML FF, HML Devil, UMD) qui influencent les rendements des fonds.
+
+2. **⁠Normalisation des Données** : Les données des facteurs sont normalisées pour garantir que chaque facteur contribue de manière égale à l'analyse.
+
+3. **⁠Calcul des Composantes Principales** : L'ACP calcule les nouvelles variables (PC1, PC2, etc.) qui sont des combinaisons linéaires des facteurs originaux, maximisant la variance expliquée.
+
+4. **⁠Interprétation des Résultats** : Les composantes principales sont interprétées pour comprendre quelles combinaisons de facteurs influencent le plus les rendements des fonds.
